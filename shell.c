@@ -1,4 +1,4 @@
-// TODO: Separate into header files and others and automate build with Makefile specification
+// TODO: Separate into header and other .c files and automate build with Makefile specification
 #include <stdio.h>
 #include <stdlib.h>  // getenv uses this
 #include <string.h>
