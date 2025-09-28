@@ -69,3 +69,13 @@ YOUR_ROOT_DIRECTORY
 
 ### Running a program
 Any program in your PATH variable paths is runnable by the shell. Normal unix commands like `ls` should work, and you can also use `git` in the shell! If some command doesn't work, you can simply check if it is in your PATH variable with the `type` builtin, example usage shown above.
+
+
+# Additional features
+- Escaping with backlashes added outside quotes
+Example usage:
+
+```
+echo hello \ \ world
+hello  world
+```

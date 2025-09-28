@@ -1,4 +1,4 @@
-// TODO: Separate into header and other .c files and automate build with Makefile specification
+// TODO: Separate into header files and others and link in Makefile
 #include <stdio.h>
 #include <stdlib.h>  // getenv uses this
 #include <string.h>
@@ -56,7 +56,7 @@ int main(void) {
 }
 
 
-// Just keeping some spatial separation here until I separate the functions into multiple header files and other .c files
+
 
 
 
@@ -82,6 +82,7 @@ int read_arguments(char *input, char (*args)[MAX_SIZE_OF_AN_ARGUMENT], int start
   int num_args = num_words(input) - 1;
   int curr_pos = starting_pos + 1;
   int j;
+  int escaped_character = 0;
   for (int i = 0; i < num_args; i++)
   {
     // Ignore leading whitespace
@@ -106,19 +107,61 @@ int read_arguments(char *input, char (*args)[MAX_SIZE_OF_AN_ARGUMENT], int start
         }
       }
     }
-  
-    else
+
+    // Treat anything wrapped in double quotes as a single argument
+    else if (input[curr_pos] == '\"' && escaped_character <= 0)
     {
-      for (j = 0; input[curr_pos] != ' ' && input[curr_pos] != '\'' && input[curr_pos] != '\0'; j++)
+      curr_pos++;
+      for (j = 0; input[curr_pos] != '\"' && input[curr_pos] != '\0'; j++)
       {
         args[i][j] = input[curr_pos++];
       }
 
       // If next character is a quote, concatenate
-      while (input[curr_pos + 1] == '\'' && input[curr_pos] == '\'')
+      while (input[curr_pos + 1] == '\"' && input[curr_pos] == '\"')
+      {
+        curr_pos += 2;
+        for (; input[curr_pos] != '\"' && input[curr_pos] != '\0'; j++)
+        {
+          args[i][j] = input[curr_pos++];
+        }
+      }
+    }
+  
+    else
+    {
+      for (j = 0; input[curr_pos] != ' ' && input[curr_pos] != '\'' && input[curr_pos] != '\"' && input[curr_pos] != '\\' && input[curr_pos] != '\0'; j++)
+      {
+        args[i][j] = input[curr_pos++];
+      }
+
+
+      // If current character is a backslash, get next character
+      while (input[curr_pos] == '\\')
+      {
+        args[i][j++] = input[++curr_pos];
+        curr_pos++;
+        for (; input[curr_pos] != ' ' && input[curr_pos] != '\'' && input[curr_pos] != '\"' && input[curr_pos] != '\\' && input[curr_pos] != '\0'; j++)
+        {
+          args[i][j] = input[curr_pos++];
+        }
+      }
+
+      // If next character is a single quote, concatenate
+      while (input[curr_pos + 1] == '\'' && input[curr_pos] == '\'' && escaped_character <= 0)
       {
         curr_pos += 2;
         for (; input[curr_pos] != '\'' && input[curr_pos] != '\0'; j++)
+        {
+          args[i][j] = input[curr_pos++];
+        }
+      }
+
+      // If next character is a double quote, concatenate
+      while (input[curr_pos + 1] == '\"' && input[curr_pos] == '\"' && escaped_character <= 0)
+      {
+        curr_pos += 2;
+        for (; input[curr_pos] != '\"' && input[curr_pos] != '\0'; j++)
         {
           args[i][j] = input[curr_pos++];
         }
@@ -286,10 +329,11 @@ int num_words(const char *s)
   int words = 0;
   int found_word = 0;
   int in_single_quote = 0;
+  int in_double_quote = 0;
   for (int i = 0; i < (int) strlen(s); i++)
   {
     // Count inside quotes as a single word, as long as there are spaces
-    if (s[i] == '\'')
+    if (s[i] == '\'' && !in_double_quote)
     {
       in_single_quote = (in_single_quote) ? 0 : 1;
       // Anything inside quotes is a word, as long as there is something insde
@@ -300,13 +344,26 @@ int num_words(const char *s)
       }
 
     }
+
+     // Count inside double quotes as a single word, as long as there are spaces
+    else if (s[i] == '\"' && !in_single_quote)
+    {
+      in_double_quote = (in_double_quote) ? 0 : 1;
+      // Anything inside quotes is a word, as long as there is something insde
+      if (in_double_quote && s[i + 1] != '\"')
+      {
+        words++;
+        found_word = 1;
+      }
+    }
+
     else if (s[i] != ' ' && s[i] != '\t' && !found_word)
     {
       words++;
       found_word = 1;
     }
 
-    else if ((s[i] == ' ' || s[i] == '\t') && !in_single_quote)
+    else if ((s[i] == ' ' || s[i] == '\t') && !in_single_quote && !in_double_quote)
       found_word = 0;
   }
   return words;
