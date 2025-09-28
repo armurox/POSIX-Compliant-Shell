@@ -79,3 +79,6 @@ Example usage:
 echo hello \ \ world
 hello  world
 ```
+
+Reference used for implementation:
+https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html
