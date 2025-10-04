@@ -7,9 +7,10 @@
 #include <sys/wait.h> // For waitpid
 #include <limits.h>
 
+#define MAX_SIZE_OF_INPUT 4000
 #define MAX_NUMBER_OF_ARGUMENTS 80
-#define MAX_SIZE_OF_AN_ARGUMENT 100
-#define MAX_SIZE_OF_A_COMMAND 200
+#define MAX_SIZE_OF_AN_ARGUMENT 300
+#define MAX_SIZE_OF_A_COMMAND 400
 #define MAX_DIRECTORY_BUFFER 4000
 
 int get_command(char *input, char *command);
@@ -21,26 +22,32 @@ int is_executable(const char *command, char *executable_dir);
 int execute_path_command(const char *executable_dir, char **argv);
 
 
-
 int main(void) {
   // Flush after every printf
   setbuf(stdout, NULL);
 
-  // Wait for user input
-  char input[100];
   while (1)
   {
+    // Wait for user input
+    char input[MAX_SIZE_OF_INPUT] = {0};
     printf("$ ");
     if (fgets(input, sizeof(input), stdin) == NULL)  // Keep reading in from input provided not a terminated shell
       break;
     input[strlen(input) - 1] = '\0';
-    char command[MAX_SIZE_OF_A_COMMAND];
+    char command[MAX_SIZE_OF_A_COMMAND] = {0};
     int curr_pos = 0;
     int num_args;
     int result;
     if ((curr_pos = get_command(input, command)))
     {
       char args[MAX_NUMBER_OF_ARGUMENTS][MAX_SIZE_OF_AN_ARGUMENT];
+      for (int i = 0; i < MAX_NUMBER_OF_ARGUMENTS; i++)
+      {
+        for (int j = 0; j < MAX_SIZE_OF_AN_ARGUMENT; j++)
+        {
+          args[i][j] = '\0';
+        }
+      }
       num_args = read_arguments(input, args, curr_pos);  // TODO: Will add some error handling for this soonn
       if ((result = execute_command(command, args, num_args)) || !strcmp(command, "exit"))
       {
@@ -49,7 +56,7 @@ int main(void) {
     }
 
     else
-      printf("%s: command not found\n", input);
+      printf("%s: command not found\n", command);
   }
   
   return 0;
@@ -67,13 +74,42 @@ int main(void) {
 int get_command(char *input, char *command)
 {
   int i;
-  for (i = 0; i < (int) strlen(input) && input[i] != ' '; i++)
+  int in_single_quote = 0;
+  int in_double_quote = 0;
+  int curr_pos = 0;
+  int incremented = 0;
+  // Ignore double and single quotes as part of the shell command read
+  for (i = 0; (input[curr_pos] != ' ' && input[curr_pos] != '\0'); i++)
   {
-    command[i] = input[i];
+    incremented = 0;
+    if (input[curr_pos] == '\"' && !in_single_quote)
+    {
+      in_double_quote = (in_double_quote) ? 0 : 1;
+      curr_pos++;
+    }
+
+    if (input[curr_pos] == '\'' && !in_double_quote)
+    {
+      in_single_quote = (in_single_quote) ? 0 : 1;
+      curr_pos++;
+    }
+
+    if (input[curr_pos] != ' ' && input[curr_pos] != '\0')
+    {
+      command[i] = input[curr_pos++];
+      incremented = 1;
+    }
+
+    while (input[curr_pos] == ' ' && (in_double_quote || in_single_quote))
+    {
+      command[((incremented) ? ++i : i)] = input[curr_pos++]; // Inside ternary for if came from normal character or space
+      incremented = 1;
+    }
+
   }
   command[i] = '\0';
 
-  char executable_dir[MAX_DIRECTORY_BUFFER]; // temporary, just so we can reuse the is_executable function, not needed anywhere
+  char executable_dir[MAX_DIRECTORY_BUFFER] = {0}; // temporary, just so we can reuse the is_executable function, not needed anywhere
   return (is_builtin(command) || is_executable(command, executable_dir)) ? i : 0;
 }
 
@@ -232,7 +268,7 @@ int execute_command(const char *command, char (*args)[MAX_SIZE_OF_AN_ARGUMENT], 
     printf("\n");
     return 0;
   }
-  char executable_dir[MAX_DIRECTORY_BUFFER];
+  char executable_dir[MAX_DIRECTORY_BUFFER] = {0};
   if (!strcmp(command, "type"))
   {
       if (is_builtin(args[0]))
