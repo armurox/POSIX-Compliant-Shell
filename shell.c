@@ -1,5 +1,6 @@
 // TODO: Separate into header files and others and link in Makefile
 // Potential solution for quotes to exlore - using strtok
+// Also, will consider potentially cleaning input first for quotes and backslashes first, before reading in commands and args
 #include <stdio.h>
 #include <stdlib.h>  // getenv uses this
 #include <string.h>
