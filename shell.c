@@ -112,19 +112,60 @@ int read_arguments(char *input, char (*args)[MAX_SIZE_OF_AN_ARGUMENT], int start
     else if (input[curr_pos] == '\"' && escaped_character <= 0)
     {
       curr_pos++;
-      for (j = 0; input[curr_pos] != '\"' && input[curr_pos] != '\0'; j++)
+      for (j = 0; input[curr_pos] != '\"' && input[curr_pos] != '\0' && input[curr_pos] != '\\'; j++)
       {
         args[i][j] = input[curr_pos++];
       }
 
-      // If next character is a quote, concatenate
-      while (input[curr_pos + 1] == '\"' && input[curr_pos] == '\"')
+      // If current character is a backslash, get next character, for double quotes special characters
+      while (input[curr_pos] == '\\')
       {
-        curr_pos += 2;
-        for (; input[curr_pos] != '\"' && input[curr_pos] != '\0'; j++)
+        int count = 0;
+        if (input[curr_pos + 1] == '\\' || input[curr_pos + 1] == '\"')
+        {
+            args[i][j++] = input[++curr_pos];
+            curr_pos++;
+            count++;
+        }
+
+
+        for (; input[curr_pos] != '\"' && input[curr_pos] != '\0' && input[curr_pos] != '\\'; j++)
+        {
+          args[i][j] = input[curr_pos++];
+          count++;
+        }
+        
+        // If still stuck on escape and no movement happened, we should just simply read the rest until the end
+        if (input[curr_pos] == '\\' && !count)
+        {
+          for (; input[curr_pos] != '\"' && input[curr_pos] != '\0'; j++)
+          {
+            args[i][j] = input[curr_pos++];
+            count++;
+          }
+        }
+
+      }
+
+      // If next character is a quote, concatenate (skiping the quote). If no space, also concatenate
+      while (((input[curr_pos + 1] == '\"' || input[curr_pos + 1] != ' ') && input[curr_pos] == '\"'))
+      {
+        curr_pos += (input[curr_pos + 1] == '\"') ? 2 : 1;
+        for (; input[curr_pos] != '\"' && input[curr_pos] != '\0' && input[curr_pos] != '\\'; j++)
         {
           args[i][j] = input[curr_pos++];
         }
+
+      // If current character is a backslash, get next character
+      while (input[curr_pos] == '\\')
+      {
+        args[i][j++] = input[++curr_pos];
+        curr_pos++;
+        for (; input[curr_pos] != ' ' && input[curr_pos] != '\'' && input[curr_pos] != '\"' && input[curr_pos] != '\\' && input[curr_pos] != '\0'; j++)
+        {
+          args[i][j] = input[curr_pos++];
+        }
+      }
       }
     }
   
@@ -349,7 +390,7 @@ int num_words(const char *s)
     else if (s[i] == '\"' && !in_single_quote)
     {
       in_double_quote = (in_double_quote) ? 0 : 1;
-      // Anything inside quotes is a word, as long as there is something insde
+      // Anything inside quotes is a word, as long as there is something inside
       if (in_double_quote && s[i + 1] != '\"')
       {
         words++;

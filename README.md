@@ -76,9 +76,17 @@ Any program in your PATH variable paths is runnable by the shell. Normal unix co
 Example usage:
 
 ```
-echo hello \ \ world
+$ echo hello \ \ world
 hello  world
 ```
+
+- Escaping with backslash inside double quotes added (specifically \ and " can be escaped)
+Example usage:
+```
+$ echo "hello\"insidequotes"script\"
+hello"insidequotesscript"
+```
+
 
 Reference used for implementation:
 https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html
