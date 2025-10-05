@@ -5,6 +5,7 @@ This repo contains the source code that I am using to build my own POSIX complia
 1. [Usage](#usage)
 2. [Bultin commands](#builtin-commands)
 3. [Running a program](#running-a-program)
+4. [Additional features](#additional-features)
 
 
 ### Usage:
@@ -71,7 +72,7 @@ YOUR_ROOT_DIRECTORY
 Any program in your PATH variable paths is runnable by the shell. Normal unix commands like `ls` should work, and you can also use `git` in the shell! If some command doesn't work, you can simply check if it is in your PATH variable with the `type` builtin, example usage shown above.
 
 
-# Additional features
+## Additional features
 - Escaping with backlashes added outside quotes
 Example usage:
 
