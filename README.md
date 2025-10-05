@@ -89,12 +89,35 @@ hello"insidequotesscript"
 
 - Commands can also be quoted
 Example usage:
-```
 
 ```
 $ echo "hello\"insidequotes"script\"
 hello"insidequotesscript"
 ```
+
+
+- Redirecting stdout command results to files, overwriting the files with > and 1>
+Example usage: 
+```
+$ echo "hello\"insidequotes"script\" > some_file
+```
+
+- Redirecting stderr command results to files, overwriting the files with 2>
+Example usage: 
+```
+$ echo "hello\"insidequotes"script\" 2> some_file
+```
+
+- Redirecting stdout command results to files, appending to the files with >> and 1>>
+Example usage: 
+```
+$ echo "hello\"insidequotes"script\" >> some_file
+```
+
+- Redirecting stderr command results to files, appending to the files with 2>>
+Example usage: 
+```
+$ echo "hello\"insidequotes"script\" 2>> some_file
 ```
 
 Reference used for implementation:

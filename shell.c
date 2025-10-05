@@ -1,7 +1,6 @@
 // POSIX Compliant shell
 // TODO: Separate into header files and others and link in Makefile
-// Potential solution for quotes to exlore - using strtok
-// Also, will consider potentially cleaning input first for quotes and backslashes first, before reading in commands and args
+// TODO: Wrap the redirection logic into a single function which accepts file stream, where to redirect to and the operator
 #include <stdio.h>
 #include <stdlib.h>  // getenv uses this
 #include <string.h>
@@ -260,6 +259,76 @@ int execute_command(const char *command, char (*args)[MAX_SIZE_OF_AN_ARGUMENT], 
 {
   if (!strcmp(command, "exit"))
       return atoi(args[0]);
+  
+  // Redirect streams to file specified after >
+  for (int i = 0; i < num_args; i++)
+    {
+      // Redirect stdout in write mode
+      if (i < num_args - 1 && (!strcmp(args[i], ">") || !strcmp(args[i], "1>")))
+      {
+        if (freopen(args[i + 1], "w", stdout) != NULL)
+        {
+          num_args = i;
+          break;
+        }
+
+        else
+        {
+          printf("Oops, could not redirect stdout to file %s\n", args[num_args - 1]);
+          return 1;
+        }
+          
+      }
+
+      // Redirect stdout in append mode
+      if (i < num_args - 1 && (!strcmp(args[i], ">>") || !strcmp(args[i], "1>>")))
+      {
+        if (freopen(args[i + 1], "a+", stdout) != NULL)
+        {
+          num_args = i;
+          break;
+        }
+
+        else
+        {
+          printf("Oops, could not redirect stdout to file %s\n", args[num_args - 1]);
+          return 1;
+        }
+          
+      }
+
+      if (i < num_args - 1 && !strcmp(args[i], "2>"))
+      {
+        if (freopen(args[i + 1], "w", stderr) != NULL)
+        {
+          num_args = i;
+          break;
+        }
+
+        else
+        {
+          printf("Oops, could not redirect stderr to file %s\n", args[num_args - 1]);
+          return 1;
+        }
+      }
+
+      // Redirect stderr in append mode
+      if (i < num_args - 1 && !strcmp(args[i], "2>>"))
+      {
+        if (freopen(args[i + 1], "a+", stderr) != NULL)
+        {
+          num_args = i;
+          break;
+        }
+
+        else
+        {
+          printf("Oops, could not redirect stdout to file %s\n", args[num_args - 1]);
+          return 1;
+        }
+          
+      }
+    }
 
   if (!strcmp(command, "echo"))
   {
@@ -269,6 +338,8 @@ int execute_command(const char *command, char (*args)[MAX_SIZE_OF_AN_ARGUMENT], 
     }
 
     printf("\n");
+    freopen("/dev/tty", "w", stdout); // End redirection after line
+    freopen("/dev/tty", "w", stderr); // End redirection after line
     return 0;
   }
   char executable_dir[MAX_DIRECTORY_BUFFER] = {0};
@@ -290,12 +361,16 @@ int execute_command(const char *command, char (*args)[MAX_SIZE_OF_AN_ARGUMENT], 
     if (getcwd(cwd, sizeof(cwd)) != NULL)
     {
       printf("%s\n", cwd);
+      freopen("/dev/tty", "w", stdout); // End redirection after line
+      freopen("/dev/tty", "w", stderr); // End redirection after line
       return 0;
     }
 
     else
     {
+      freopen("/dev/tty", "w", stdout); // End redirection after line
       printf("Oops, something went wrong\n");
+      freopen("/dev/tty", "w", stderr); // End redirection after line
       return 1;
     }
   }
@@ -303,11 +378,16 @@ int execute_command(const char *command, char (*args)[MAX_SIZE_OF_AN_ARGUMENT], 
   if (!strcmp(command, "cd"))
   {
       if (!strcmp(args[0], "~"))
+      {
         return chdir(getenv("HOME"));
+        freopen("/dev/tty", "w", stdout); // End redirection after line
+        freopen("/dev/tty", "w", stderr); // End redirection after line
+      }
 
       else if (chdir(args[0]) != 0)
         printf("cd: %s: No such file or directory\n", args[0]);
-
+      freopen("/dev/tty", "w", stdout); // End redirection after line
+      freopen("/dev/tty", "w", stderr); // End redirection after line
       return 0;
 
   }
@@ -326,6 +406,8 @@ int execute_command(const char *command, char (*args)[MAX_SIZE_OF_AN_ARGUMENT], 
   }
 
   printf("Oops, something went wrong\n");
+  freopen("/dev/tty", "w", stdout); // End redirection after line
+  freopen("/dev/tty", "w", stderr); // End redirection after line
   return 1;
 }
 
@@ -339,6 +421,8 @@ int execute_path_command(const char *executable_dir, char **argv)
     execv(executable_dir, argv);
     // This is simply a fallback in case execv fails for any reason, since if it executes correctly, it automatically terminates
     // the process before this line
+    freopen("/dev/tty", "w", stdout); // End redirection after line
+    freopen("/dev/tty", "w", stderr); // End redirection after line
     return 1;
   }
 
@@ -347,12 +431,16 @@ int execute_path_command(const char *executable_dir, char **argv)
     // In the parent we should wait for the child to complete
     int status;
     waitpid(pid, &status, 0);
+    freopen("/dev/tty", "w", stdout); // End redirection after line
+    freopen("/dev/tty", "w", stderr); // End redirection after line
     return 0;
   }
 
   else
   {
     // Fork failed, terminate the shell
+    freopen("/dev/tty", "w", stdout); // End redirection after line
+    freopen("/dev/tty", "w", stderr); // End redirection after line
     return 1;
   }
 
