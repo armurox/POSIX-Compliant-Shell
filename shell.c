@@ -1,6 +1,7 @@
 // POSIX Compliant shell
 // TODO: Separate into header files and others and link in Makefile
 // TODO: Wrap the redirection logic into a single function which accepts file stream, where to redirect to and the operator
+// TODO: Consider using strtok for quotes, concatenation should happen by default
 #include <stdio.h>
 #include <stdlib.h>  // getenv uses this
 #include <string.h>
